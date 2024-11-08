@@ -1,108 +1,57 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime
-import uuid
+from typing import Optional
+import uvicorn
 
-app = FastAPI(title="Custom Connector", version="1.0.0", docs_url="/")
+app = FastAPI(
+    title="Simple API",
+    description="A simple FastAPI application with two endpoints",
+    version="1.0.0",
+    docs_url="/"
+)
 
 
-class TaskBase(BaseModel):
-    title: str
+class Item(BaseModel):
+    name: str
     description: Optional[str] = None
-    due_date: Optional[datetime] = None
+    price: float
 
 
-class TaskCreate(TaskBase):
-    pass
-
-
-class Task(TaskBase):
-    id: str
-    created_at: datetime
-    completed: bool = False
-
-    class Config:
-        from_attributes = True
+class ItemUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
 
 
 # In-memory storage
-tasks_db = {}
+items = {}
 
 
-@app.get("/")
-async def root():
-    """Root endpoint returning API status"""
-    return {"status": "online", "timestamp": datetime.now()}
+@app.post(
+    "/items/",
+    response_model=Item,
+    status_code=201,
+    summary="Create a new item",
+    description="Create a new item with the provided details",
+)
+async def create_item(item: Item):
+    if item.name in items:
+        raise HTTPException(status_code=400, detail="Item already exists")
+    items[item.name] = item
+    return item
 
 
-@app.post("/tasks/", response_model=Task, status_code=status.HTTP_201_CREATED)
-async def create_task(task: TaskCreate):
-    """Create a new task"""
-    task_id = str(uuid.uuid4())
-    task_dict = task.model_dump()
-    task_dict.update({"id": task_id, "created_at": datetime.now(), "completed": False})
-    tasks_db[task_id] = task_dict
-    return task_dict
-
-
-@app.get("/tasks/", response_model=List[Task])
-async def list_tasks():
-    """List all tasks"""
-    return list(tasks_db.values())
-
-
-@app.get("/tasks/{task_id}", response_model=Task)
-async def get_task(task_id: str):
-    """Get a specific task by ID"""
-    if task_id not in tasks_db:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-        )
-    return tasks_db[task_id]
-
-
-@app.patch("/tasks/{task_id}", response_model=Task)
-async def update_task(task_id: str, task: TaskBase):
-    """Update a task"""
-    if task_id not in tasks_db:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-        )
-
-    task_dict = tasks_db[task_id]
-    update_data = task.model_dump(exclude_unset=True)
-
-    for field, value in update_data.items():
-        task_dict[field] = value
-
-    tasks_db[task_id] = task_dict
-    return task_dict
-
-
-@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_task(task_id: str):
-    """Delete a task"""
-    if task_id not in tasks_db:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-        )
-    del tasks_db[task_id]
-    return None
-
-
-@app.post("/tasks/{task_id}/complete", response_model=Task)
-async def complete_task(task_id: str):
-    """Mark a task as completed"""
-    if task_id not in tasks_db:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-        )
-    tasks_db[task_id]["completed"] = True
-    return tasks_db[task_id]
+@app.get(
+    "/items/{item_name}",
+    response_model=Item,
+    summary="Get item by name",
+    description="Retrieve an item's details by its name",
+)
+async def get_item(item_name: str):
+    if item_name not in items:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return items[item_name]
 
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
