@@ -1,0 +1,177 @@
+openapi: 3.0.0
+info:
+  title: Tasks API
+  description: A simple API for managing tasks
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Production deployed server
+
+paths:
+  /:
+    get:
+      summary: Root endpoint
+      description: Returns API status and current timestamp
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "online"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /tasks/:
+    post:
+      summary: Create a new task
+      description: Creates a new task with the given details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCreate"
+      responses:
+        "201":
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+    get:
+      summary: List all tasks
+      description: Returns a list of all tasks
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
+  /tasks/{task_id}:
+    parameters:
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the task
+
+    get:
+      summary: Get a specific task
+      description: Returns details of a specific task
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+
+    patch:
+      summary: Update a task
+      description: Updates an existing task with new details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskBase"
+      responses:
+        "200":
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+
+    delete:
+      summary: Delete a task
+      description: Deletes an existing task
+      responses:
+        "204":
+          description: Task deleted successfully
+        "404":
+          description: Task not found
+
+  /tasks/{task_id}/complete:
+    parameters:
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the task
+
+    post:
+      summary: Complete a task
+      description: Marks a task as completed
+      responses:
+        "200":
+          description: Task marked as completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+
+components:
+  schemas:
+    TaskBase:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the task
+        description:
+          type: string
+          nullable: true
+          description: Optional description of the task
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Optional due date for the task
+      required:
+        - title
+
+    TaskCreate:
+      allOf:
+        - $ref: "#/components/schemas/TaskBase"
+
+    Task:
+      allOf:
+        - $ref: "#/components/schemas/TaskBase"
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Unique identifier for the task
+            created_at:
+              type: string
+              format: date-time
+              description: Timestamp when the task was created
+            completed:
+              type: boolean
+              description: Whether the task is completed
+          required:
+            - id
+            - created_at
+            - completed
