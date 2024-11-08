@@ -5,12 +5,13 @@ info:
   version: 1.0.0
 
 servers:
-  - url: https://task-maker-vc02.onrender.com/
-    description: Production deployed server
+  - url: https://task-maker-vc02.onrender.com
+    description: Production server
 
 paths:
   /:
     get:
+      operationId: getStatus
       summary: Root endpoint
       description: Returns API status and current timestamp
       responses:
@@ -23,13 +24,13 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: "online"
                   timestamp:
                     type: string
                     format: date-time
 
-  /tasks/:
+  /tasks:
     post:
+      operationId: createTask
       summary: Create a new task
       description: Creates a new task with the given details
       requestBody:
@@ -47,6 +48,7 @@ paths:
                 $ref: "#/components/schemas/Task"
 
     get:
+      operationId: listTasks
       summary: List all tasks
       description: Returns a list of all tasks
       responses:
@@ -59,9 +61,9 @@ paths:
                 items:
                   $ref: "#/components/schemas/Task"
 
-  /tasks/{task_id}:
+  /tasks/{taskId}:
     parameters:
-      - name: task_id
+      - name: taskId
         in: path
         required: true
         schema:
@@ -69,6 +71,7 @@ paths:
         description: The ID of the task
 
     get:
+      operationId: getTask
       summary: Get a specific task
       description: Returns details of a specific task
       responses:
@@ -80,8 +83,13 @@ paths:
                 $ref: "#/components/schemas/Task"
         "404":
           description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
     patch:
+      operationId: updateTask
       summary: Update a task
       description: Updates an existing task with new details
       requestBody:
@@ -89,7 +97,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TaskBase"
+              $ref: "#/components/schemas/TaskUpdate"
       responses:
         "200":
           description: Task updated successfully
@@ -99,8 +107,13 @@ paths:
                 $ref: "#/components/schemas/Task"
         "404":
           description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
     delete:
+      operationId: deleteTask
       summary: Delete a task
       description: Deletes an existing task
       responses:
@@ -108,10 +121,14 @@ paths:
           description: Task deleted successfully
         "404":
           description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
-  /tasks/{task_id}/complete:
+  /tasks/{taskId}/complete:
     parameters:
-      - name: task_id
+      - name: taskId
         in: path
         required: true
         schema:
@@ -119,6 +136,7 @@ paths:
         description: The ID of the task
 
     post:
+      operationId: completeTask
       summary: Complete a task
       description: Marks a task as completed
       responses:
@@ -130,6 +148,10 @@ paths:
                 $ref: "#/components/schemas/Task"
         "404":
           description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -155,6 +177,22 @@ components:
       allOf:
         - $ref: "#/components/schemas/TaskBase"
 
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the task
+        description:
+          type: string
+          nullable: true
+          description: Optional description of the task
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Optional due date for the task
+
     Task:
       allOf:
         - $ref: "#/components/schemas/TaskBase"
@@ -162,7 +200,6 @@ components:
           properties:
             id:
               type: string
-              format: uuid
               description: Unique identifier for the task
             created_at:
               type: string
@@ -175,3 +212,12 @@ components:
             - id
             - created_at
             - completed
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+      required:
+        - detail
