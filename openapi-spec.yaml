@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  title: Simple API
-  description: A simple FastAPI application with CRUD endpoints
+  title: Custom API
+  description: A custom FastAPI application with CRUD endpoints
   version: 1.0.0
 servers:
   - url: https://task-maker-vc02.onrender.com/
