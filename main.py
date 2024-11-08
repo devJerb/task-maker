@@ -4,8 +4,8 @@ from typing import Optional, Dict
 import uvicorn
 
 app = FastAPI(
-    title="Simple API",
-    description="A simple FastAPI application with CRUD endpoints",
+    title="Custom API",
+    description="A custom FastAPI application with CRUD endpoints",
     version="1.0.0",
     docs_url="/",
 )
