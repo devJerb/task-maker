@@ -1,14 +1,27 @@
 openapi: 3.0.0
 info:
   title: Simple API
-  description: A simple FastAPI application with two endpoints
+  description: A simple FastAPI application with CRUD endpoints
   version: 1.0.0
 servers:
   - url: https://task-maker-vc02.onrender.com/
     description: Development server
 
 paths:
-  /items/:
+  /items:
+    get:
+      summary: Get all items
+      description: Retrieve a list of all items
+      responses:
+        "200":
+          description: A list of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+
     post:
       summary: Create a new item
       description: Create a new item with the provided details
@@ -50,6 +63,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Item"
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Delete an item by name
+      description: Delete an item by its name
+      parameters:
+        - name: item_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the item to delete
+      responses:
+        "200":
+          description: Item deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Item deleted successfully"
         "404":
           description: Item not found
           content:

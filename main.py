@@ -1,13 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict
 import uvicorn
 
 app = FastAPI(
     title="Simple API",
-    description="A simple FastAPI application with two endpoints",
+    description="A simple FastAPI application with CRUD endpoints",
     version="1.0.0",
-    docs_url="/"
+    docs_url="/",
 )
 
 
@@ -24,7 +24,7 @@ class ItemUpdate(BaseModel):
 
 
 # In-memory storage
-items = {}
+items: Dict[str, Item] = {}
 
 
 @app.post(
@@ -42,6 +42,16 @@ async def create_item(item: Item):
 
 
 @app.get(
+    "/items",
+    response_model=list[Item],
+    summary="Get all items",
+    description="Retrieve a list of all items",
+)
+async def get_all_items():
+    return list(items.values())
+
+
+@app.get(
     "/items/{item_name}",
     response_model=Item,
     summary="Get item by name",
@@ -51,6 +61,18 @@ async def get_item(item_name: str):
     if item_name not in items:
         raise HTTPException(status_code=404, detail="Item not found")
     return items[item_name]
+
+
+@app.delete(
+    "/items/{item_name}",
+    summary="Delete an item by name",
+    description="Delete an item by its name",
+)
+async def delete_item(item_name: str):
+    if item_name not in items:
+        raise HTTPException(status_code=404, detail="Item not found")
+    del items[item_name]
+    return {"message": "Item deleted successfully"}
 
 
 if __name__ == "__main__":
