@@ -1,79 +1,53 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Optional, Dict
-import uvicorn
+from typing import List
+from datetime import date
+import random
 
-app = FastAPI(
-    title="Custom API",
-    description="A custom FastAPI application with CRUD endpoints",
-    version="1.0.0",
-    docs_url="/",
-)
+app = FastAPI(title="Game Data API", version="1.0.0", docs_url="/")
 
 
-class Item(BaseModel):
-    name: str
-    description: Optional[str] = None
+class Game(BaseModel):
+    title: str
+    description: str
     price: float
+    date_released: date
 
 
-class ItemUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    price: Optional[float] = None
-
-
-# In-memory storage
-items: Dict[str, Item] = {}
-
-
-@app.post(
-    "/items/",
-    response_model=Item,
-    status_code=201,
-    summary="Create a new item",
-    description="Create a new item with the provided details",
-)
-async def create_item(item: Item):
-    if item.name in items:
-        raise HTTPException(status_code=400, detail="Item already exists")
-    items[item.name] = item
-    return item
-
-
-@app.get(
-    "/items",
-    response_model=list[Item],
-    summary="Get all items",
-    description="Retrieve a list of all items",
-)
-async def get_all_items():
-    return list(items.values())
+def generate_random_games(n: int) -> List[Game]:
+    titles = [
+        "Adventure Quest",
+        "Mystery Manor",
+        "Fantasy World",
+        "Space Odyssey",
+        "Pirate's Cove",
+    ]
+    descriptions = [
+        "An exciting journey awaits you in this thrilling adventure game.",
+        "Solve puzzles and uncover secrets in this mysterious game.",
+        "A magical world filled with mythical creatures and quests.",
+        "Explore the galaxy and face unknown dangers in space.",
+        "A pirate-themed game where you search for hidden treasures.",
+    ]
+    games = []
+    for _ in range(n):
+        game = Game(
+            title=random.choice(titles),
+            description=random.choice(descriptions),
+            price=round(random.uniform(5.0, 50.0), 2),
+            date_released=date(
+                random.randint(2000, 2023), random.randint(1, 12), random.randint(1, 28)
+            ),
+        )
+        games.append(game)
+    return games
 
 
 @app.get(
-    "/items/{item_name}",
-    response_model=Item,
-    summary="Get item by name",
-    description="Retrieve an item's details by its name",
+    "/games",
+    response_model=List[Game],
+    summary="Get a list of games",
+    description="Returns a list of games with random data.",
 )
-async def get_item(item_name: str):
-    if item_name not in items:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return items[item_name]
-
-
-@app.delete(
-    "/items/{item_name}",
-    summary="Delete an item by name",
-    description="Delete an item by its name",
-)
-async def delete_item(item_name: str):
-    if item_name not in items:
-        raise HTTPException(status_code=404, detail="Item not found")
-    del items[item_name]
-    return {"message": "Item deleted successfully"}
-
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+async def get_games():
+    return generate_random_games(5)

@@ -1,126 +1,54 @@
 openapi: 3.0.0
 info:
-  title: Custom API
-  description: A custom FastAPI application with CRUD endpoints
-  version: 1.0.0
+  title: Game Data API
+  version: "1.0.0"
+  description: "API for retrieving random game data with keys: title, description, price, and date_released."
+
 servers:
   - url: https://task-maker-vc02.onrender.com/
     description: Development server
 
 paths:
-  /items:
+  /games:
     get:
-      summary: Get all items
-      description: Retrieve a list of all items
+      summary: "Get a list of games"
+      description: "Returns a list of games with random data."
       responses:
         "200":
-          description: A list of items
+          description: "Successful response with a list of game objects."
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Item"
-
-    post:
-      summary: Create a new item
-      description: Create a new item with the provided details
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Item"
-      responses:
-        "201":
-          description: Item created successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Item"
-        "400":
-          description: Item already exists
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-  /items/{item_name}:
-    get:
-      summary: Get item by name
-      description: Retrieve an item's details by its name
-      parameters:
-        - name: item_name
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Name of the item to retrieve
-      responses:
-        "200":
-          description: Item found successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Item"
-        "404":
-          description: Item not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-    delete:
-      summary: Delete an item by name
-      description: Delete an item by its name
-      parameters:
-        - name: item_name
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Name of the item to delete
-      responses:
-        "200":
-          description: Item deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Item deleted successfully"
-        "404":
-          description: Item not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      example: "Adventure Quest"
+                    description:
+                      type: string
+                      example: "An exciting journey awaits you in this thrilling adventure game."
+                    price:
+                      type: number
+                      format: float
+                      example: 29.99
+                    date_released:
+                      type: string
+                      format: date
+                      example: "2021-05-15"
 components:
   schemas:
-    Item:
+    Game:
       type: object
       properties:
-        name:
+        title:
           type: string
-          description: Name of the item
         description:
           type: string
-          description: Optional description of the item
-          nullable: true
         price:
           type: number
           format: float
-          description: Price of the item
-      required:
-        - name
-        - price
-
-    Error:
-      type: object
-      properties:
-        detail:
+        date_released:
           type: string
-          description: Error message
+          format: date
